@@ -24,8 +24,6 @@ from package cimport Package, pmpkg_t
 from depend cimport pmdepmissing_t, DepMissing
 from conflict cimport pmconflict_t, Conflict
 
-from exceptions import LockError
-
 include 'enums.pxi'
 
 def pycb_event (event, data1, data2):
@@ -136,7 +134,7 @@ cdef class Transaction:
 								#... and call alpm_trans_init passing the c callback defined
 								#in alpm.pyx and checking for errors
 								if alpm_trans_init (type, flags, cevent, cconv, cprog) < 0:
-												raise LockError
+												raise RuntimeError, "Cannot initialize transaction: %s" %alpm_sterror(pm_errno)
 
 				def __dealloc__ (self):
 								#python user destroyed the transaction... just for sake we 

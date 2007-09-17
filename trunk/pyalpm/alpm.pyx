@@ -14,27 +14,37 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not see <http://www.gnu.org/licenses>
 
-cimport db
-cimport package
-cimport config
-cimport depend
-cimport conflict
-cimport group
-cimport sync
-cimport transaction
-from db cimport pmdb_t, Database
-from package cimport pmpkg_t, Package, alpm_pkg_load
-from config cimport Config
-from depend cimport pmdepend_t, pmdepmissing_t, Depend, DepMissing
-from conflict cimport pmconflict_t, Conflict
-from group cimport pmgrp_t, Group
-from sync cimport pmsyncpkg_t, SyncPkg
-from transaction cimport Transaction, pmtransevt_t, pmtransconv_t
-from transaction cimport pmtranstype_t, pmtransprog_t, pmtransflag_t
+cdef extern void initdb()
+cdef extern void initpackage()
+cdef extern void initconfig()
+cdef extern void initdepend()
+cdef extern void initconflict()
+cdef extern void initgroup()
+cdef extern void initsync()
+cdef extern void inittransaction()
+cdef extern void initexceptions()
+
+initdb()
+initpackage()
+initconfig()
+initdepend()
+initconflict()
+initgroup()
+initsync()
+inittransaction()
+initexceptions()
+
+from package import Package, package_new_from_file
+from db import Database
+from transaction import Transaction
+from depend import Depend, DepMissing
+from conflict import Conflict
+from sync import SyncPkg
+from group import Group
+from config import Config
 
 #includes python variables that translates the enums
 include "enums.pxi"
-
 
 cdef extern from "stdarg.h":
 				# for the alpm_cb_log
@@ -90,16 +100,6 @@ def init (dbpath, root):
 def release ():
 				alpm_release()
 				return
-
-def package_new_from_file (filename):
-				#Create a new package from a file
-				cdef Package pypkg
-				cdef pmpkg_t *pkg
-
-				alpm_pkg_load (filename, &pkg)
-				pypkg = Package()
-				pypkg.pkg = pkg
-				return pypkg
 
 def set_dlcb(down):
 				#Set the python download callback

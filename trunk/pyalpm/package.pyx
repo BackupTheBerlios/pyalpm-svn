@@ -198,3 +198,14 @@ cdef class Package:
 												i = alpm_list_next (i)
 												continue
 								return ret
+
+def package_new_from_file (filename):
+				#Create a new package from a file
+				cdef Package pypkg
+				cdef pmpkg_t *pkg
+
+				alpm_pkg_load (filename, &pkg)
+				pypkg = Package()
+				pypkg.pkg = pkg
+				return pypkg
+
