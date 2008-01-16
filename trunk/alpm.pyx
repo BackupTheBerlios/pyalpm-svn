@@ -773,7 +773,6 @@ cdef class Alpm:
 					value = value.strip()
 				except Exception:
 					continue
-				print "%s => %s" %(key, value)
 				if key == "Include":
 					self._parse(value)
 					continue
