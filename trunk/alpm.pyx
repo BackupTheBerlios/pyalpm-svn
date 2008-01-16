@@ -371,7 +371,6 @@ cdef object alpm_list_to_py_list (alpm_list_t *list):
 
 	pylist = []
 	i = alpm_list_first(list)
-	pylist.append(<char *>alpm_list_getdata(i))
 
 	while i:
 		pylist.append(<char *>alpm_list_getdata(i))
@@ -536,6 +535,205 @@ cdef class Alpm:
 			continue
 		return pydbs
 
+	def get_root(self):
+		return alpm_option_get_root()
+
+	def set_root(self, root):
+		alpm_option_set_root(root)
+		return
+
+	def get_dbpath(self):
+		return alpm_option_get_dbpath()
+
+	def set_dbpath(self, dbpath):
+		alpm_option_set_dbpath(dbpath)
+		return
+
+	def get_cachedirs(self):
+		cdef alpm_list_t *cdirs
+		
+		cdirs = alpm_option_get_cachedirs()
+		pycdirs = alpm_list_to_py_list(cdirs)
+		return pycdirs
+
+	def set_cahcedirs(self, pycdirs):
+		cdef alpm_list_t *cdirs
+
+		cdirs = py_list_to_alpm_list(pycdirs)
+		alpm_option_set_cachedirs(cdirs)
+		return
+
+	def add_cachedir(self, cache):
+		alpm_option_add_cachedir(cache)
+		return
+
+	def remove_cachedir(self, cache):
+		alpm_option_remove_cachedir(cache)
+		return
+
+	def get_logfile(self):
+		return alpm_option_get_logfile()
+
+	def set_logfile(self, logfile):
+		alpm_option_set_logfile(logfile)
+		return
+
+	def get_lockfile(self):
+		return alpm_option_get_lockfile()
+
+	def get_usesyslog(self):
+		if alpm_option_get_usesyslog():
+			return True
+		else:
+			return False
+
+	def set_usesyslog(self, use):
+		if use:
+			alpm_option_set_usesyslog(1)
+		else:
+			alpm_option_set_usesyslog(0)
+		return
+
+	def get_noupgrades(self):
+		cdef alpm_list_t *noup
+
+		noup = alpm_option_get_noupgrades()
+		pynoup = alpm_list_to_py_list(noup)
+		return pynoup
+
+	def add_noupgrade(self, pkg):
+		alpm_option_add_noupgrade(pkg)
+		return
+
+	def set_noupgrades(self, noups):
+		cdef alpm_list_t *alpm_noups
+
+		alpm_noups = py_list_to_alpm_list(noups)
+		alpm_option_set_noupgrades(alpm_noups)
+		return
+
+	def remove_noupgrade(self, pkg):
+		alpm_option_remove_noupgrade(pkg)
+		return
+
+	def get_noextracts(self):
+		cdef alpm_list_t *noext
+
+		noext = alpm_option_get_noextracts()
+		pynoext = alpm_list_to_py_list(noext)
+		return pynoext
+
+	def add_noextract(self, pkg):
+		alpm_option_add_noextract(pkg)
+		return
+
+	def set_noextracts(self, noexts):
+		cdef alpm_list_t *noext
+
+		noext = py_list_to_alpm_list(noexts)
+		alpm_option_set_noextracts(noext)
+		return
+
+	def remove_noextracts(self, noex):
+		alpm_option_remove_noextract(noex)
+		return
+
+	def get_ignorepkgs(self):
+		cdef alpm_list_t *ipkgs
+
+		ipkgs = alpm_option_get_ignorepkgs()
+		pyipkgs = alpm_list_to_py_list(ipkgs)
+		return pyipkgs
+
+	def add_ignorepkg(self, pkg):
+		alpm_option_add_ignorepkg(pkg)
+		return
+
+	#def set_ignorepkgs(self, ipkgs):
+	#	cdef alpm_list_t *alpm_ipkgs
+
+	#	alpm_ipkgs = py_list_to_alpm_list(ipkgs)
+	#	alpm_option_set_ignorepkgs(alpm_ipkgs)
+	#	return
+
+	def remove_ignorepkg(self, ipkg):
+		alpm_option_remove_ignorepkg(ipkg)
+		return
+
+	def get_holdpkgs(self):
+		cdef alpm_list_t *hpkg
+		
+		hpkg = alpm_option_get_holdpkgs()
+		if hpkg == NULL:
+			raise RuntimeError, alpm_strerrorlast()
+		pyhpkgs = alpm_list_to_py_list(hpkg)
+		return pyhpkgs
+
+	def add_holdpkg(self, pkg):
+		alpm_option_add_holdpkg(pkg)
+		return
+
+	def set_holdpkgs(self, hpkgs):
+		cdef alpm_list_t *alpm_hpkgs
+
+		alpm_hpkgs = py_list_to_alpm_list(hpkgs)
+		alpm_option_set_holdpkgs(alpm_hpkgs)
+		return
+
+	def remove_holdpkg(self, hpkg):
+		alpm_option_remove_holdpkg(hpkg)
+		return
+
+	def get_ignoregrps(self):
+		cdef alpm_list_t *grps
+
+		grps = alpm_option_get_ignoregrps()
+		pygrps = alpm_list_to_py_list(grps)
+		return pygrps
+
+	def add_ignoregrp(self, grp):
+		alpm_option_add_ignoregrp(grp)
+		return
+
+	#def set_ignoregrps(self, igrps):
+	#	cdef alpm_list_t *alpm_igrps
+
+	#	alpm_igrps = py_list_to_alpm_list(igrps)
+	#	alpm_option_set_ignoregrps(alpm_igrps)
+	#	return
+
+	def remove_ignoregrp(self, grp):
+		alpm_option_remove_ignoregrp(grp)
+		return
+
+	def get_xfercommand(self):
+		return alpm_option_get_xfercommand()
+
+	def set_xfercommand(self, cmd):
+		alpm_option_set_xfercommand(cmd)
+		return
+
+	def get_nopassiveftp(self):
+		if alpm_option_get_nopassiveftp():
+			return True
+		else:
+			return False
+		return
+
+	def set_nopassiveftp(self, nopasv):
+		if nopasv:
+			alpm_option_set_nopassiveftp(1)
+		else:
+			alpm_option_set_nopassiveftp(0)
+		return
+
+	def set_usedelta(self, delta):
+		if delta:
+			alpm_option_set_usedelta(1)
+		else:
+			alpm_option_set_usedelta(0)
+		return
+
 	def get_localdb(self):
 		cdef Database pydb
 		cdef pmdb_t *db
@@ -564,18 +762,18 @@ cdef class Alpm:
 				if section == "options":
 					continue
 				else:
-					print section
 					db = alpm_db_register_sync (section)
 					if db == NULL:
 						raise RuntimeError, alpm_strerrorlast()
 				continue
 			else:
 				try:
-					(key, value) = line.split(" = ")[1]
-				except IndexError:
+					(key, value) = line.split(" = ")
+					key = key.strip()
+					value = value.strip()
+				except Exception:
 					continue
-				except ValueError:
-					continue
+				print "%s => %s" %(key, value)
 				if key == "Include":
 					self._parse(value)
 					continue
