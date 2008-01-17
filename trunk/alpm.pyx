@@ -398,7 +398,13 @@ cdef class Package:
 		pass
 
 	def check_md5sum(self):
-		alpm_pkg_checkmd5sum(self.pkg)
+		return alpm_pkg_checkmd5sum(self.pkg)
+
+	def compute_requiredby(self):
+		cdef alpm_list_t *list
+
+		list = alpm_pkg_compute_requiredby(self.pkg)
+		return alpm_list_to_py_list(list)
 
 	def get_filename(self):
 		cdef char *filename
