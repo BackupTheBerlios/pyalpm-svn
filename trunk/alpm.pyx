@@ -122,6 +122,10 @@ cdef extern from "alpm.h":
 
 	pmpkg_t *alpm_db_get_pkg(pmdb_t *db, char *name)
 	alpm_list_t *alpm_db_getpkgcache (pmdb_t *db)
+	alpm_list_t *alpm_db_whatprovides(pmdb_t *db, char *name)
+
+	pmgrp_t *alpm_db_readgrp(pmdb_t *db, char *name)
+	alpm_list_t *alpm_db_getgrpcache(pmdb_t *db)
 	alpm_list_t *alpm_db_search(pmdb_t *db, alpm_list_t *needles)
 
 	ctypedef enum pmpkgreason_t:
@@ -475,6 +479,22 @@ cdef class Package:
 		pylist = alpm_list_to_py_list(list)
 		return pylist
 
+cdef class Group:
+	cdef pmgrp_t *grp
+
+	def __init__(self):
+		pass
+
+	def get_name(self):
+		return alpm_grp_get_name(self.grp)
+
+	def get_packages(self):
+		cdef alpm_list_t *pkgs
+		cdef alpm_list_t *i
+
+		pkgs = alpm_grp_get_pkgs(self.grp)
+		return alpm_list_to_py_list(pkgs)
+
 cdef class Database:
 	cdef pmdb_t *db
 
@@ -496,9 +516,80 @@ cdef class Database:
 
 	def set_server(self, url):
 		alpm_db_setserver(self.db, url)
+		return
 
-	def db_update(self, level):
+	def update(self, level):
 		alpm_db_update(level, self.db)
+		return
+
+	def get_package(self, name):
+		cdef pmpkg_t *pkg
+		cdef Package pypkg
+
+		pkg = alpm_db_get_pkg(self.db, name)
+		pypkg = Package()
+		pypkg.pkg = pkg
+		return pypkg
+
+	def get_pkgcache(self):
+		cdef alpm_list_t *list
+		cdef alpm_list_t *i
+		cdef Package tmp
+
+		ret = []
+
+		list = alpm_db_getpkgcache(self.db)
+		i = alpm_list_first(list)
+		while i:
+			tmp = Package()
+			tmp.pkg = <pmpkg_t *>alpm_list_getdata(i)
+			ret.append(tmp)
+			i = alpm_list_next(i)
+			continue
+		return ret
+
+	def what_provides(self, name):
+		cdef alpm_list_t *list
+		cdef alpm_list_t *i
+
+		list = alpm_db_whatprovides(self.db, name)
+		return alpm_list_to_py_list(list)
+
+	def search(self, needles):
+		cdef alpm_list_t *alpm_needles
+		cdef alpm_list_t *results
+
+		alpm_needles = py_list_to_alpm_list(needles)
+		results = alpm_db_search(self.db, alpm_needles)
+		ret = alpm_list_to_py_list(results)
+		return ret
+
+	def read_group(self, name):
+		cdef pmgrp_t *grp
+		cdef Group group
+
+		group = Group()
+		grp = alpm_db_readgrp(self.db, name)
+		group.grp = grp
+		return group
+
+	def get_grpcache(self):
+		cdef alpm_list_t *list
+		cdef alpm_list_t *i
+		cdef Group tmp
+
+		ret = []
+
+		list = alpm_db_getgrpcache(self.db)
+		i = alpm_list_first(list)
+
+		while i:
+			tmp = Group()
+			tmp.grp = <pmgrp_t *>alpm_list_getdata(i)
+			ret.append(tmp)
+			i = alpm_list_next(i)
+			continue
+		return ret
 
 cdef class Alpm:
 	cdef char *fname
