@@ -835,7 +835,18 @@ cdef class Alpm:
 		pydb = Database()
 		pydb.db = db
 		return pydb
-	
+
+	def load_package(self, filename):
+		cdef pmpkg_t *pkg
+		cdef Package pypkg
+
+		if (alpm_pkg_load(filename, 1, &pkg) != 0):
+			raise RuntimeError, alpm_strerrorlast()
+
+		pypkg = Package()
+		pypkg.pkg = pkg
+		return pypkg
+
 	def _parse (self, fname):
 		cdef pmdb_t *db
 		db = NULL
