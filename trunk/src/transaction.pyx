@@ -1,6 +1,6 @@
 from package cimport Package
 from list cimport alpm_list_t, alpm_list_new, alpm_list_first, alpm_list_getdata, alpm_list_next, alpm_list_free
-from alpm import alpm_strerrolast
+from alpm cimport alpm_strerrorlast
 
 cdef void event_cb(pmtransevt_t event, void *data1, void *data2):
 	#some conversions
@@ -45,7 +45,8 @@ cdef class Transaction:
 		if type(cb_progress).__name__ == "function":
 			py_progress_cb = cb_progress
 
-		alpm_trans_init(<pmtranstype_t>1, <pmtransflag_t>flags, <alpm_trans_cb_event>event_cb, <alpm_trans_cb_conv>conv_cb, <alpm_trans_cb_progress>progress_cb)
+		if (alpm_trans_init(<pmtranstype_t>1, <pmtransflag_t>flags, <alpm_trans_cb_event>event_cb, <alpm_trans_cb_conv>conv_cb, <alpm_trans_cb_progress>progress_cb) != 0):
+			raise RuntimeError, "unable to init transaction: %s" %alpm_strerrorlast()
 
 	def add_target (self, target):
 		if type(target).__name__ == "Package":

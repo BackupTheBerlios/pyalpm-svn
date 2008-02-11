@@ -86,9 +86,5 @@ cdef extern from "alpm.h":
 	int alpm_trans_interrupt()
 	int alpm_trans_release()
 
-cdef void event_cb(pmtransevt_t event, void *data1, void *data2)
-cdef void conv_cb(pmtransconv_t conv, void *data1, void *data2, void *data3, int *response)
-cdef void progress_cb(pmtransprog_t prog, char *pkgname, int percent, int howmany, int remain)
-
 cdef class Transaction:
 	pass

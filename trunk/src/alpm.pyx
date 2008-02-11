@@ -1,6 +1,99 @@
 from database cimport Database, alpm_db_get_name, alpm_db_register_local, alpm_db_register_sync, alpm_db_setserver
-from transaction cimport Transaction
 from list cimport alpm_list_t, alpm_list_first, alpm_list_next, alpm_list_getdata
+#from transaction cimport Transaction
+
+# transaction type constants
+TRANS_TYPE_ADD = 1
+TRANS_TYPE_REMOVE = 2
+TRANS_TYPE_REMOVEUPGRADE = 3
+TRANS_TYPE_UPGRADE = 4
+TRANS_TYPE_SYNC = 5
+
+# transaction flags constants
+TRANS_FLAG_NODEPS = 0x01
+TRANS_FLAG_FORCE = 0x02
+TRANS_FLAG_NOSAVE = 0x04
+TRANS_FLAG_CASCADE = 0x10
+TRANS_FLAG_RECURSE = 0x20
+TRANS_FLAG_DBONLY = 0x40
+TRANS_FLAG_DEPENDSONLY = 0x80
+TRANS_FLAG_ALLDEPS = 0x100
+TRANS_FLAG_DOWNLOADONLY = 0x200
+TRANS_FLAG_NOSCRIPTLET = 0x400
+TRANS_FLAG_NOCONFLICTS = 0x800
+TRANS_FLAG_PRINTURIS = 0x1000
+TRANS_FLAG_NEEDED = 0x2000
+
+# transaction events identifiers
+TRANS_EVT_CHECKDEPS_START = 1
+TRANS_EVT_CHECKDEPS_DONE = 2
+TRANS_EVT_FILECONFLICTS_START = 3
+TRANS_EVT_FILECONFLICTS_DONE = 4
+TRANS_EVT_RESOLVEDEPS_START = 5
+TRANS_EVT_RESOLVEDEPS_DONE = 6
+TRANS_EVT_INTERCONFLICTS_START = 7
+TRANS_EVT_INTERCONFLICTS_DONE = 8
+TRANS_EVT_ADD_START = 9
+TRANS_EVT_ADD_DONE = 10
+TRANS_EVT_REMOVE_START = 11
+TRANS_EVT_REMOVE_DONE = 12
+TRANS_EVT_UPGRADE_START = 13
+TRANS_EVT_UPGRADE_DONE = 14
+TRANS_EVT_EXTRACT_DONE = 15
+TRANS_EVT_INTEGRITY_START = 16
+TRANS_EVT_INTEGRITY_DONE = 17
+TRANS_EVT_DELTA_INTEGRITY_START = 18
+TRANS_EVT_DELTA_INTEGRITY_DONE = 19
+TRANS_EVT_DELTA_PATCHES_START = 20
+TRANS_EVT_DELTA_PATCHES_DONE = 21
+TRANS_EVT_DELTA_PATCH_START = 22
+TRANS_EVT_DELTA_PATCH_DONE = 23
+TRANS_EVT_DELTA_PATCH_FAILED = 24
+TRANS_EVT_SCRIPTLET_INFO = 25
+TRANS_EVT_PRINTURI = 26
+TRANS_EVT_RETRIEVE_START = 27
+
+# Conversation identifiers
+TRANS_CONV_INSTALL_IGNOREPKG = 0x01
+TRANS_CONV_REPLACE_PKG = 0x02
+TRANS_CONV_CONFLICT_PKG = 0x04
+TRANS_CONV_CORRUPTED_PKG = 0x08
+TRANS_CONV_LOCAL_NEWER = 0x10
+TRANS_CONV_REMOVE_HOLDPKG = 0x40
+
+# Transaction progress identifiers
+TRANS_PROGRESS_ADD_START = 0
+TRANS_PROGRESS_UPGRADE_START = 1
+TRANS_PROGRESS_REMOVE_START = 2
+TRANS_PROGRESS_CONFLICT_START = 3
+
+# Log levels
+LOG_ERROR = 0x01
+LOG_WARNING = 0x02
+LOG_DEBUG = 0x04
+LOG_FUNCTION = 0x08
+
+cdef void log_cb (pmloglevel_t level, char *format, va_list args):
+	string = PyString_FromFormatV(format, args)
+	py_logcb(level, string)
+
+cdef void download_cb (char *filename, int file_xfered, int file_total, int list_xfered, int list_total):
+	py_dlcb(filename, file_xfered, file_total, list_xfered, list_total)
+
+def py_logcb(level, string):
+	if level == LOG_ERROR:
+		message = "Error: %s" %string
+	elif level == LOG_WARNING:
+		message = "Warning: %s" %string
+	elif level == LOG_DEBUG:
+		message = "Debug: %s" %string
+	elif level == LOG_FUNCTION:
+		message = "Function: %s" %string
+
+	print message
+
+def py_dlcb(filename, file_xfered, file_total, list_xfered, list_total):
+	return
 
 cdef class Alpm:
 	cdef char *fname
@@ -16,9 +109,20 @@ cdef class Alpm:
 		alpm_option_add_cachedir("/var/cache/pacman/pkg/")
 		alpm_option_set_logfile("/var/log/pacman.log")
 
+		alpm_option_set_logcb(<alpm_cb_log>log_cb)
+		alpm_option_set_dlcb(<alpm_cb_download>download_cb)
+
 		alpm_db_register_local()
 
 		self._parse(self.fname)
+
+	def set_logcb (self, logcb):
+		global py_logcb
+		py_logcb = logcb
+
+	def set_dlcb(self, dlcb):
+		global py_dlcb
+		py_dlcb = dlcb
 
 	def get_root(self):
 		return alpm_option_get_root()
@@ -110,7 +214,7 @@ cdef class Alpm:
 		ret = []
 
 		noex = alpm_option_get_noextracts()
-		i = alpm_list_first(i)
+		i = alpm_list_first(noex)
 
 		while i:
 			ret.append(<char *>alpm_list_getdata(i))
@@ -136,7 +240,7 @@ cdef class Alpm:
 		ret = []
 
 		ipkg = alpm_option_get_ignorepkgs()
-		i = alpm_list_first(i)
+		i = alpm_list_first(ipkg)
 
 		while i:
 			ret.append(<char *>alpm_list_getdata(i))
@@ -189,7 +293,7 @@ cdef class Alpm:
 		ret = []
 
 		igrps = alpm_option_get_ignoregrps()
-		i = alpm_list_first(i)
+		i = alpm_list_first(igrps)
 
 		while i:
 			ret.append(<char *>alpm_list_getdata(i))
@@ -258,9 +362,6 @@ cdef class Alpm:
 			i = alpm_list_next(i)
 			continue
 		return ret
-
-	def init_transaction(self, type = 1, flags = 0x0, cb_event = None, cb_conv = None, cb_prog = None):
-		return Transaction(type, flags, cb_event, cb_conv, cb_prog)
 
 	def _parse (self, fname):
 		cdef pmdb_t *db

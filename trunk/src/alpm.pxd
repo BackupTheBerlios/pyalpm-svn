@@ -74,3 +74,6 @@ cdef extern from "alpm.h":
 	alpm_list_t *alpm_option_get_syncdbs()
 
 	char *alpm_strerrorlast()
+
+cdef void log_cb (pmloglevel_t, char *, va_list)
+cdef void download_cb (char *filename, int file_xfered, int file_total, int list_xfered, int list_total)
