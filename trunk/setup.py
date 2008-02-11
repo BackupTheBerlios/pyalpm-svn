@@ -14,7 +14,8 @@ setup (
 				 "src/alpm.pyx",
 				 "src/database.pyx",
 				 "src/group.pyx",
-				 "src/package.pyx"
+				 "src/package.pyx",
+				 "src/transaction.pyx"
 				],
 				libraries=['alpm']
 			)

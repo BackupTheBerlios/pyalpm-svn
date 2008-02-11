@@ -11,3 +11,4 @@ cdef extern from "alpm_list.h":
 
 	alpm_list_t *alpm_list_new()
 	alpm_list_t *alpm_list_add(alpm_list_t *list, void *data)
+	void alpm_list_free(alpm_list_t *list)

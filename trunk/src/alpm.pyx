@@ -1,4 +1,5 @@
 from database cimport Database, alpm_db_get_name, alpm_db_register_local, alpm_db_register_sync, alpm_db_setserver
+from transaction cimport Transaction
 from list cimport alpm_list_t, alpm_list_first, alpm_list_next, alpm_list_getdata
 
 cdef class Alpm:
@@ -257,6 +258,9 @@ cdef class Alpm:
 			i = alpm_list_next(i)
 			continue
 		return ret
+
+	def init_transaction(self, type = 1, flags = 0x0, cb_event = None, cb_conv = None, cb_prog = None):
+		return Transaction(type, flags, cb_event, cb_conv, cb_prog)
 
 	def _parse (self, fname):
 		cdef pmdb_t *db
